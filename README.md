@@ -141,6 +141,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-If you have any questions or suggestions, feel free to open an issue or contact me directly through GitHub.
+If you have any feedback, questions, or suggestions, please feel free to open an issue or contact me directly through GitHub.
 
+[![GitHub](https://img.shields.io/badge/Made%20by-Andres%20Nicolas%20Alegre-brightgreen)](https://github.com/andresnalegre)
 
