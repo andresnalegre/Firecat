@@ -1,3 +1,4 @@
+
 # Firecat
 
 Firecat is a simple desktop application built using PyQt5 that provides a customisable web interface with shortcuts to popular websites and the ability to personalise the theme and background. This project is ideal for users who want a visually appealing and functional dashboard on their desktop.
@@ -13,118 +14,87 @@ Firecat is a simple desktop application built using PyQt5 that provides a custom
 
 ### Prerequisites
 
-Ensure you have the following installed on your system:
+Before you begin, let's make sure you have everything you need:
 
 - **Python 3.x**: Firecat requires Python 3.x to run.
-- **PyQt5**: This library is necessary to create the GUI. Install it using pip if you don't have it:
+- **Visual Studio Code**: I’m using VS Code as the development environment.
 
-  ```bash
-  pip install PyQt5
-  ```
+### Setting Up the Environment in VS Code (macOS)
 
-  ### Troubleshooting PyQt5 Installation Issues
-
-If you encounter issues while installing PyQt5, follow these steps:
-
-1. **Upgrade pip**: An outdated version of pip can cause installation problems. You can upgrade pip by running:
-
-  ```bash
-  pip install --upgrade pip
-  ```
-
-2. **Use a Virtual Environment**: It is recommended to install dependencies in a virtual environment to avoid conflicts with other projects. Here’s how you can set it up:
-
-  ```bash
-  python -m venv firecat-env
-  source firecat-env/bin/activate  # On Windows use `firecat-env\Scripts\activate`
-  pip install PyQt5
-  ```
-
-3. **Platform-Specific Considerations**:
-   - **Windows**: Ensure that you have the latest version of the Visual C++ Redistributable installed, as PyQt5 may require it. You can download it from the [Microsoft website](https://aka.ms/vs/16/release/vc_redist.x64.exe).
-
-   - **macOS**: If you encounter issues, you might need to install the Xcode command line tools, which provide essential developer tools required by PyQt5:
+1. **Create and Activate the Virtual Environment**:
+   - In the terminal, navigate to the project directory and create a virtual environment:
 
      ```bash
-     xcode-select --install
+     python3 -m venv firecat-env
      ```
 
-   - **Linux**: On Linux distributions, you may need to install additional system libraries and development packages. For Debian-based distributions (like Ubuntu), you can install them with:
+   - Activate the environment:
 
      ```bash
-     sudo apt-get install python3-dev libgl1-mesa-glx
+     source firecat-env/bin/activate
      ```
 
-4. **Check Python Version Compatibility**: Ensure that the version of PyQt5 you are trying to install is compatible with your version of Python. Occasionally, certain PyQt5 versions are better suited for specific Python versions.
+2. **Install Dependencies**:
+   - With the virtual environment active, install the required libraries:
 
-5. **Fallback to Specific PyQt5 Version**: If the latest version of PyQt5 causes issues, try installing a previous, more stable version:
+     ```bash
+     python3 -m pip install PyQt5 
+     python3 -m pip install PyQt5-sip 
+     python3 -m pip install PyQtWebEngine
+     ```
+
+3. **Configure VS Code**:
+   - Open the Command Palette (`Cmd+Shift+P`) in VS Code.
+   - Select "Python: Select Interpreter" and choose the Python interpreter from the virtual environment (`firecat-env/bin/python`).
+
+### Troubleshooting PyQt5 Installation
+
+If you encounter issues while installing PyQt5, here are some tips:
+
+1. **Update pip**: Sometimes, outdated versions of pip can cause issues. Update pip with:
+
+   ```bash
+   python3 -m pip install --upgrade pip
+   ```
+
+2. **Install Xcode Command Line Tools**: On macOS, certain issues can arise if you don't have Xcode installed:
+
+   ```bash
+   xcode-select --install
+   ```
+
+3. **Check Python Compatibility**: The version of PyQt5 I'm using to run Firecat is 5.15.4. Install it with:
 
    ```bash
    pip install PyQt5==5.15.4
    ```
 
-### Running the Application
-
-After successfully installing the prerequisites, you can run the application:
-
-1. **Navigate to the Project Directory**:
-   
-   Ensure you are in the project directory where `firecat.py` is located.
-
-2. **Run the Application**:
-   
-   Execute the following command in your terminal:
+4. **Reinstall PyQt5**: Reinstalling can often resolve some bugs:
 
    ```bash
-   python firecat.py
+   python3.8 -m pip uninstall PyQt5 
+   python3.8 -m pip uninstall PyQt5-sip 
+   python3.8 -m pip uninstall PyQtWebEngine
+   python3.8 -m pip install PyQt5 
+   python3.8 -m pip install PyQt5-sip 
+   python3.8 -m pip install PyQtWebEngine
    ```
 
-This will launch the Firecat application, opening the main window where you can interact with the web interface.
+### Running Firecat
 
-### Optional: Customisation
+After everything is set up, let's run Firecat as follows:
 
-Firecat supports various customisation options to enhance your experience, including theme selection and background image customisation. Here’s how you can personalise your setup:
+1. **Open the Project in VS Code**:
+   - Navigate to the project directory using the terminal in VS Code.
 
-- **Changing Theme**: 
-  - You can switch between light and dark themes either through the settings panel within the application or by manually editing the `user_preferences.json` file.
-  - To edit manually, open the `user_preferences.json` file and change the `"theme"` field to `"light"` or `"dark"`.
+2. **Run the Application**:
+   - In the terminal, with the virtual environment still active, run:
 
-- **Setting a Background Image**: 
-  - To set a custom background image, use the "Customize Firecat" button within the application.
-  - Alternatively, you can manually set a background image by adding the image path to the `"background_image"` field in the `user_preferences.json` file.
+     ```bash
+     python3 firecat.py
+     ```
 
-### Configuration File
-
-The application saves user preferences in a configuration file named `user_preferences.json`. This file is automatically generated the first time you run the application and stores settings such as theme preference and background image. Here's an example of what the `user_preferences.json` file might look like:
-
-```json
-{
-    "theme": "dark",
-    "selected_color": "#4285F4",
-    "background_image": "/path/to/your/image.png"
-}
-```
-
-You can manually edit this file to adjust your settings if you prefer not to use the application's interface.
-
-## Troubleshooting
-
-### Common Issues
-
-1. **PyQt5 Installation Issues**:
-   - Ensure that your Python installation is up to date.
-   - If the installation fails, consider upgrading pip or using a virtual environment as described in the installation section.
-
-2. **File Not Found Errors**:
-   - If you encounter errors related to missing files, double-check that all paths in your configuration are correct, particularly the path to any custom background images.
-
-3. **Application Not Starting**:
-   - Verify that all dependencies are correctly installed and that your Python version is compatible with the project.
-   - Make sure you are running the application from the correct directory where `firecat.py` is located.
-
-4. **Issues with Customisation Settings**:
-   - If your custom theme or background image is not applied correctly, ensure that the paths specified in `user_preferences.json` are accurate and that the files exist.
-   - For theme issues, confirm that the `"theme"` field in the configuration file is set to either `"light"` or `"dark"`.
+This should open the main window of Firecat, where you can start interacting with the prototype browser or application.
 
 ## Contributing
 
@@ -144,4 +114,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you have any feedback, questions, or suggestions, please feel free to open an issue or contact me directly through GitHub.
 
 [![GitHub](https://img.shields.io/badge/Made%20by-Andres%20Nicolas%20Alegre-brightgreen)](https://github.com/andresnalegre)
-
