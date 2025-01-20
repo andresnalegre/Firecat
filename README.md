@@ -1,0 +1,2 @@
+# Firecat
+Python Project
