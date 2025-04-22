@@ -22,7 +22,7 @@ class BrowserManager:
         self.tabs = []
         self.first_tab_created = False
         self.parent = tab_widget.parent()
-        self.current_background_color = "#2e2e2e"
+        self.current_background_color = "#FFFFFF"
 
     def create_new_tab(self, url=None):
         if url is None:
@@ -163,8 +163,8 @@ class PreferencesManager:
 
     def _get_default_settings(self):
         return {
-            "theme": "dark",
-            "backgroundColor": "#2e2e2e",
+            "theme": "light",
+            "backgroundColor": "#FFFFFF",
             "backgroundImage": None,
             "shortcuts": True
         }

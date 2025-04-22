@@ -31,7 +31,7 @@ class Handler(QObject):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
-        self.current_background_color = "#2e2e2e"
+        self.current_background_color = "#FFFFFF"
 
     @pyqtSlot(str)
     def openLink(self, url):
@@ -55,20 +55,27 @@ class Handler(QObject):
             if 'backgroundColor' in settings_dict:
                 self.current_background_color = settings_dict['backgroundColor']
             self.parent.preferences.save_settings(settings_dict)
-            self.apply_current_background()
         except Exception as e:
             print(f"Error saving settings: {e}")
 
     @pyqtSlot()
     def resetSettings(self):
+        """Reset settings to default (light mode), but only affect the main tab"""
         try:
             self.parent.preferences.reset_settings()
-            self.current_background_color = "#2e2e2e"
-            self.apply_current_background()
+            self.current_background_color = "#FFFFFF"
+
+            if self.parent.tab_widget.count() > 0:
+                main_tab = self.parent.tab_widget.widget(0)
+                if main_tab:
+                    main_tab.page().runJavaScript(
+                        f"document.body.style.backgroundColor = '{self.current_background_color}';"
+                        f"document.body.style.color = '#000000';"
+                    )
         except Exception as e:
             print(f"Error resetting settings: {e}")
 
-    @pyqtSlot(result=str) #type: ignore
+    @pyqtSlot(result=str)
     def getSettings(self):
         try:
             settings = self.parent.preferences.load_preferences()
@@ -81,46 +88,54 @@ class Handler(QObject):
 
     @pyqtSlot(str)
     def changeBackground(self, color):
+        """Change the background color of the current tab only"""
         self.current_background_color = color
-        self.apply_current_background()
+        
+        current_tab = self.parent.tab_widget.currentWidget()
+        if current_tab:
+            current_tab.page().runJavaScript(
+                f"document.body.style.backgroundColor = '{color}';"
+            )
+        
         settings = self.parent.preferences.load_preferences()
         settings['backgroundColor'] = color
         self.parent.preferences.save_settings(settings)
 
     def apply_current_background(self):
-        for i in range(self.parent.tab_widget.count()):
-            web_view = self.parent.tab_widget.widget(i)
-            if web_view:
-                web_view.page().runJavaScript(
-                    f"document.body.style.backgroundColor = '{self.current_background_color}';"
-                )
+        """Apply the current background color to the current tab only"""
+        current_tab = self.parent.tab_widget.currentWidget()
+        if current_tab:
+            current_tab.page().runJavaScript(
+                f"document.body.style.backgroundColor = '{self.current_background_color}';"
+            )
 
     @pyqtSlot(str)
     def setMode(self, mode):
+        """Set the display mode (light/dark) for the current tab only"""
         color = '#FFFFFF' if mode == 'light' else '#2e2e2e'
         text_color = '#000000' if mode == 'light' else '#FFFFFF'
         
-        self.changeBackground(color)
+        self.current_background_color = color
         
-        for i in range(self.parent.tab_widget.count()):
-            web_view = self.parent.tab_widget.widget(i)
-            if web_view:
-                js_code = f"""
-                    document.body.style.color = '{text_color}';
-                    document.body.classList.remove('light-mode', 'dark-mode');
-                    document.body.classList.add('{mode}-mode');
-                    
-                    const searchBar = document.querySelector('.search-bar');
-                    if (searchBar) {{
-                        searchBar.style.backgroundColor = '{('#FFFFFF' if mode == 'light' else '#3b3b3b')}';
-                        searchBar.style.color = '{text_color}';
-                    }}
-                    
-                    document.querySelectorAll('.shortcut').forEach(shortcut => {{
-                        shortcut.style.backgroundColor = '{('#f0f0f0' if mode == 'light' else '#2e2e2e')}';
-                    }});
-                """
-                web_view.page().runJavaScript(js_code)
+        current_tab = self.parent.tab_widget.currentWidget()
+        if current_tab:
+            js_code = f"""
+                document.body.style.backgroundColor = '{color}';
+                document.body.style.color = '{text_color}';
+                document.body.classList.remove('light-mode', 'dark-mode');
+                document.body.classList.add('{mode}-mode');
+                
+                const searchBar = document.querySelector('.search-bar');
+                if (searchBar) {{
+                    searchBar.style.backgroundColor = '{('#FFFFFF' if mode == 'light' else '#3b3b3b')}';
+                    searchBar.style.color = '{text_color}';
+                }}
+                
+                document.querySelectorAll('.shortcut').forEach(shortcut => {{
+                    shortcut.style.backgroundColor = '{('#f0f0f0' if mode == 'light' else '#2e2e2e')}';
+                }});
+            """
+            current_tab.page().runJavaScript(js_code)
         
         settings = self.parent.preferences.load_preferences()
         settings['mode'] = mode
@@ -431,33 +446,56 @@ class MainWindow(QMainWindow):
                 }}
 
                 async function resetDefaults() {{
-                    const h = await ensureHandler();
-                    
-                    await h.resetSettings();
-                    
-                    document.body.style.backgroundImage = 'none';
-                    
-                    const shortcutsToggle = document.getElementById('shortcuts-toggle');
-                    if (shortcutsToggle) {{
-                        shortcutsToggle.checked = true;
-                        await toggleShortcuts();
+                    try {{
+                        const h = await ensureHandler();
+                        await h.resetSettings();
+                        
+                        document.body.style.backgroundImage = 'none';
+                        document.body.style.backgroundColor = '#FFFFFF';
+                        document.body.style.color = '#000000';
+                        
+                        const shortcutsToggle = document.getElementById('shortcuts-toggle');
+                        if (shortcutsToggle) {{
+                            shortcutsToggle.checked = true;
+                            toggleShortcuts();
+                        }}
+                        
+                        document.querySelectorAll('.theme-option').forEach(el => {{
+                            el.classList.remove("selected");
+                        }});
+                        
+                        const fileInput = document.getElementById('background-upload');
+                        if (fileInput) {{
+                            fileInput.value = '';
+                        }}
+                        
+                        const colorPicker = document.getElementById('color-picker');
+                        if (colorPicker) {{
+                            colorPicker.value = '#FFFFFF';
+                        }}
+                        
+                        document.body.classList.remove('dark-mode');
+                        document.body.classList.add('light-mode');
+                        
+                        const searchBar = document.querySelector('.search-bar');
+                        if (searchBar) {{
+                            searchBar.style.backgroundColor = '#FFFFFF';
+                            searchBar.style.color = '#000000';
+                        }}
+                        
+                        document.querySelectorAll('.shortcut').forEach(shortcut => {{
+                            shortcut.style.backgroundColor = '#f0f0f0';
+                        }});
+                        
+                        document.querySelectorAll('.customize-mode button').forEach(button => {{
+                            button.classList.remove('active');
+                        }});
+                        document.getElementById('light').classList.add('active');
+                        
+                        console.log("Reset to defaults (light mode) completed successfully");
+                    }} catch (error) {{
+                        console.error("Error resetting to defaults:", error);
                     }}
-                    
-                    document.querySelectorAll('.theme-option').forEach(el => {{
-                        el.classList.remove("selected");
-                    }});
-                    
-                    const fileInput = document.getElementById('background-upload');
-                    if (fileInput) {{
-                        fileInput.value = '';
-                    }}
-                    
-                    const colorPicker = document.getElementById('color-picker');
-                    if (colorPicker) {{
-                        colorPicker.value = '#2e2e2e';
-                    }}
-                    
-                    await setMode('dark');
                 }}
 
                 async function handleSearch(event) {{
@@ -549,8 +587,8 @@ class MainWindow(QMainWindow):
 
                 <div class="settings-container">
                     <div class="customize-mode">
-                        <button id="light" onclick="setMode('light')">Light</button>
-                        <button id="dark" class="active" onclick="setMode('dark')">Dark</button>
+                        <button id="light" class="active" onclick="setMode('light')">Light</button>
+                        <button id="dark" onclick="setMode('dark')">Dark</button>
                     </div>
                     <div class="theme-container">
                         <div class="theme-option" style="background-color: #4285F4;" onclick="selectTheme(this)"></div>
