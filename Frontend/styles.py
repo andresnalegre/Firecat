@@ -379,6 +379,7 @@ def get_styles():
     }
     """
 
+
 def get_qt_styles():
     return """
     QTabWidget::pane {
