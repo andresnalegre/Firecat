@@ -1,4 +1,6 @@
-# Firecat
+# Firecat Browser
+
+![Firecat GIF](Images/Firecat.gif)
 
 **Firecat** is a Python project where I demonstrate my skills with Python using PyQt5 and Selenium. This project is inspired by modern browsers and allows users to perform searches within it.
 
