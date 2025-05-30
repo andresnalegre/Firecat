@@ -11,7 +11,6 @@ from Backend.utils import (
 )
 from Frontend.styles import get_styles
 
-# Constantes para cores e imagens
 DEFAULT_IMAGE_PATH = "../Firecat/Images/Firecat.png"
 LIGHT_BG_COLOR = "#FFFFFF"
 DARK_BG_COLOR = "#2e2e2e"
@@ -19,15 +18,6 @@ LIGHT_TEXT_COLOR = "#000000"
 DARK_TEXT_COLOR = "#FFFFFF"
 
 def get_html_content(image_path=DEFAULT_IMAGE_PATH):
-    """Gera o conteúdo HTML para a página inicial do navegador.
-    
-    Args:
-        image_path: Caminho para o arquivo de imagem do logotipo
-        
-    Returns:
-        String contendo o HTML completo da página inicial
-    """
-    # Carregar e codificar a imagem
     try:
         if os.path.exists(image_path):
             with open(image_path, "rb") as image_file:
@@ -39,9 +29,7 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
         image_base64 = ""
         print(f"Error loading image {image_path}: {e}")
 
-    # JavaScript com funções refatoradas mas mantendo a mesma funcionalidade
     javascript = """
-        // Retorna preto ou branco para melhor contraste dado um fundo (funciona para rgb ou hex)
         function getContrastYIQ(color) {
             let r,g,b;
             if (color.startsWith('rgb')) {
@@ -85,7 +73,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
 
         async function saveCurrentSettings(mode=null, colorOverride=null) {
             const h = await ensureHandler();
-            // Permite sobrescrever e salvar um modo/caracter cor custom explicitamente
             let modeValue = mode !== null ? mode : (
                 document.body.classList.contains('dark-mode') ? 'dark' :
                 (document.body.classList.contains('light-mode') ? 'light' :
@@ -111,7 +98,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
             element.style.border = "2px solid white";
             const color = window.getComputedStyle(element).backgroundColor;
 
-            // Detecta light (branco), dark (cinza escuro), ou custom
             let mode, textColor;
             if (color === 'rgb(255, 255, 255)' || color === '#FFFFFF') {
                 mode = 'light';
@@ -151,46 +137,36 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
         async function setMode(mode) {
             const h = await ensureHandler();
             
-            // Desselecionar todos os botões primeiro
             document.querySelectorAll('.customize-mode button').forEach(button => {
                 button.classList.remove('active');
             });
             
-            // Se for um modo personalizado, não alteramos as cores
             if (mode === 'custom') {
-                // Se tiver seleção personalizada, mantém essa seleção
                 document.body.classList.remove('light-mode', 'dark-mode');
                 document.body.classList.add('custom-mode');
                 
-                // Manter a cor atual, apenas salvar o modo
                 await saveCurrentSettings('custom');
                 return;
             }
             
-            // Somente para light e dark selecionamos o botão correspondente
             if (document.getElementById(mode)) {
                 document.getElementById(mode).classList.add('active');
             }
             
-            // Define as cores para modos light e dark
             const color = mode === 'light' ? '#FFFFFF' : '#2e2e2e';
             const textColor = mode === 'light' ? '#000000' : '#FFFFFF';
             
-            // Atualiza as configurações no servidor
             await h.changeBackground(color);
             
-            // Atualiza a aparência
             document.body.style.backgroundColor = color;
             document.body.style.color = textColor;
             
-            // Atualiza a barra de pesquisa
             let searchBar = document.querySelector('.search-bar');
             if (searchBar) {
                 searchBar.style.backgroundColor = (mode === 'light') ? '#FFFFFF' : '#3b3b3b';
                 searchBar.style.color = textColor;
             }
             
-            // Atualiza os atalhos
             document.querySelectorAll('.shortcut').forEach(shortcut => {
                 shortcut.style.backgroundColor = (mode === 'light') ? '#f0f0f0' : '#2e2e2e';
                 const svg = shortcut.querySelector('svg');
@@ -199,11 +175,9 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                 }
             });
             
-            // Atualiza as classes do corpo
             document.body.classList.remove('light-mode', 'dark-mode', 'custom-mode');
             document.body.classList.add(mode + '-mode');
             
-            // Salva as configurações
             await saveCurrentSettings(mode, color);
         }
 
@@ -331,12 +305,10 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                 let saved = {};
                 try { saved = JSON.parse(settings_json); } catch (e) {}
                 
-                // FIX: Usar o modo salvo diretamente, em vez de determiná-lo apenas pela cor
                 let mode = saved.mode || 'light';
                 let bgColor = saved.backgroundColor ? saved.backgroundColor.toLowerCase() : "#ffffff";
                 let textColor;
                 
-                // Verificações de consistência
                 if (mode === 'light' && bgColor !== "#ffffff") {
                     if (bgColor === "#2e2e2e") {
                         mode = 'dark';
@@ -351,30 +323,24 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                     }
                 }
                 
-                // Atualizar classes do corpo
                 document.body.classList.remove('light-mode','dark-mode','custom-mode');
                 document.body.classList.add(mode + '-mode');
                 
-                // Determinar cor do texto baseado no modo
                 if (mode === 'light') {
                     textColor = '#000000';
                 } else if (mode === 'dark') {
                     textColor = '#ffffff';
-                } else { // custom
+                } else {
                     textColor = getContrastYIQ(bgColor);
                 }
                 
-                // Aplicar cores
                 document.body.style.backgroundColor = bgColor;
                 document.body.style.color = textColor;
 
-                // Atualizar barra de pesquisa
                 let searchBar = document.querySelector('.search-bar');
                 if (searchBar) {
-                    // Para modo personalizado, usar cor mais adequada para a barra de pesquisa
                     let searchBarBg;
                     if (mode === 'custom') {
-                        // Mais claro para texto escuro, mais escuro para texto claro
                         searchBarBg = textColor === '#000000' ? '#ffffff' : '#3b3b3b';
                     } else {
                         searchBarBg = (mode === 'dark') ? '#3b3b3b' : '#ffffff';
@@ -383,11 +349,9 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                     searchBar.style.color = textColor;
                 }
 
-                // Atualizar atalhos
                 document.querySelectorAll('.shortcut').forEach(shortcut => {
                     let shortcutBg;
                     if (mode === 'custom') {
-                        // Escolher cor de fundo adequada para atalhos em modo personalizado
                         shortcutBg = textColor === '#000000' ? '#f0f0f0' : '#2e2e2e';
                     } else {
                         shortcutBg = (mode === 'dark') ? '#2e2e2e' : '#f0f0f0';
@@ -398,26 +362,22 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                         svg.style.fill = textColor;
                 });
 
-                // Atualizar botões de modo
                 document.querySelectorAll('.customize-mode button').forEach(button => {
                     button.classList.remove('active');
                 });
                 
-                // Ativar o botão apenas se for light ou dark (não para custom)
                 if (mode === 'light' && document.getElementById('light')) {
                     document.getElementById('light').classList.add('active');
                 } else if (mode === 'dark' && document.getElementById('dark')) {
                     document.getElementById('dark').classList.add('active');
                 }
 
-                // Configurar atalhos
                 const shortcutsToggle = document.getElementById('shortcuts-toggle');
                 if (shortcutsToggle && saved.shortcuts !== undefined) {
                     shortcutsToggle.checked = saved.shortcuts;
                     await toggleShortcuts();
                 }
 
-                // Aplicar imagem de fundo se existir
                 if (saved.backgroundImage) {
                     document.body.style.backgroundImage = saved.backgroundImage;
                     document.body.style.backgroundSize = "cover";
@@ -425,7 +385,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                     document.body.style.backgroundRepeat = "no-repeat";
                 }
 
-                // Configurar atalhos
                 const shortcuts = {
                     "youtube-shortcut": 'https://www.youtube.com',
                     "instagram-shortcut": 'https://www.instagram.com',
@@ -449,7 +408,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
         });
     """
 
-    # Corpo HTML
     html_body = f"""
         <div class="search-container">
             <img src="data:image/png;base64,{image_base64}" alt="Firecat Image" class="image">
@@ -504,7 +462,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
         </div>
     """
 
-    # Montar HTML completo
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
