@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication
-from Backend.firecat import MainWindow
+from Backend.ui import MainWindow
 
 def main():
     app = QApplication(sys.argv)
