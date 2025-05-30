@@ -1,7 +1,7 @@
 {
     "theme": "light",
-    "backgroundColor": "#ffffff",
+    "backgroundColor": "#6a1b9a",
     "backgroundImage": "",
     "shortcuts": true,
-    "mode": "light"
+    "mode": "custom"
 }
