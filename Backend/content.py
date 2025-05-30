@@ -80,7 +80,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
             );
             const settings = {
                 backgroundColor: colorOverride || document.body.style.backgroundColor || '#FFFFFF',
-                backgroundImage: document.body.style.backgroundImage,
                 mode: modeValue,
                 shortcuts: document.getElementById('shortcuts-toggle')?.checked ?? true
             };
@@ -203,25 +202,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
             }
         }
 
-        function openBackgroundUpload() {
-            document.getElementById('background-upload').click();
-        }
-
-        async function uploadBackgroundImage() {
-            const file = document.getElementById('background-upload').files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    document.body.style.backgroundImage = 'url(' + e.target.result + ')';
-                    document.body.style.backgroundSize = 'cover';
-                    document.body.style.backgroundPosition = 'center';
-                    document.body.style.backgroundRepeat = 'no-repeat';
-                    await saveCurrentSettings();
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
         function openColorPicker() {
             document.getElementById('color-picker').click();
         }
@@ -252,7 +232,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
             try {
                 const h = await ensureHandler();
                 await h.resetSettings();
-                document.body.style.backgroundImage = 'none';
                 document.body.style.backgroundColor = '#FFFFFF';
                 document.body.style.color = '#000000';
 
@@ -265,8 +244,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                 document.querySelectorAll('.theme-option').forEach(el => {
                     el.classList.remove("selected");
                 });
-                const fileInput = document.getElementById('background-upload');
-                if (fileInput) fileInput.value = '';
                 const colorPicker = document.getElementById('color-picker');
                 if (colorPicker) colorPicker.value = '#FFFFFF';
                 document.body.classList.remove('dark-mode','custom-mode');
@@ -378,13 +355,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                     await toggleShortcuts();
                 }
 
-                if (saved.backgroundImage) {
-                    document.body.style.backgroundImage = saved.backgroundImage;
-                    document.body.style.backgroundSize = "cover";
-                    document.body.style.backgroundPosition = "center";
-                    document.body.style.backgroundRepeat = "no-repeat";
-                }
-
                 const shortcuts = {
                     "youtube-shortcut": 'https://www.youtube.com',
                     "instagram-shortcut": 'https://www.instagram.com',
@@ -423,7 +393,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
             </div>
         </div>
         <button class="customize-button" onclick="openCustomizePanel()">Customize Firecat</button>
-        <input type="file" id="background-upload" accept="image/png, image/jpeg" style="display:none;" onchange="uploadBackgroundImage()">
         <input type="color" id="color-picker" style="display:none;" onchange="applyCustomColor(event)">
         <div id="customizePanel" class="customize-panel">
             <div class="customize-header">
@@ -449,7 +418,6 @@ def get_html_content(image_path=DEFAULT_IMAGE_PATH):
                     </div>
                 </div>
                 <div class="divider"></div>
-                <button class="customize-theme-button" onclick="openBackgroundUpload()">Customize Theme</button>
             </div>
             <div class="shortcuts-toggle-container">
                 <h3>Shortcuts</h3>

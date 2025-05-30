@@ -1,11 +1,9 @@
 import os
 import json
 import re
-import shutil
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 CONFIG_FILE = "user_preferences.json"
-IMAGE_FOLDER = "background_images"
 
 LIGHT_MODE_COLOR = "#ffffff"
 DARK_MODE_COLOR = "#2e2e2e"
@@ -29,16 +27,12 @@ def rgb_to_hex(rgb: str) -> str:
 
 class PreferencesManager:
     
-    def __init__(self, config_file: str = CONFIG_FILE, image_folder: str = IMAGE_FOLDER):
+    def __init__(self, config_file: str = CONFIG_FILE):
         self.config_file = config_file
-        self.image_folder = image_folder
         self._ensure_directories()
         self._settings_cache = None
     
     def _ensure_directories(self) -> None:
-        if not os.path.exists(self.image_folder):
-            os.makedirs(self.image_folder, exist_ok=True)
-        
         config_dir = os.path.dirname(os.path.abspath(self.config_file))
         if not os.path.exists(config_dir):
             os.makedirs(config_dir, exist_ok=True)
@@ -47,7 +41,6 @@ class PreferencesManager:
         return {
             "theme": "light",
             "backgroundColor": LIGHT_MODE_COLOR,
-            "backgroundImage": None,
             "shortcuts": True,
             "mode": "light"
         }
@@ -127,25 +120,6 @@ class PreferencesManager:
     
     def get_shortcuts(self) -> bool:
         return self.get_setting("shortcuts", True)
-    
-    def get_background_image(self) -> Optional[str]:
-        return self.get_setting("backgroundImage")
-    
-    def set_background_image(self, image_path: str) -> None:
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Arquivo de imagem '{image_path}' não existe.")
-        
-        os.makedirs(self.image_folder, exist_ok=True)
-        
-        image_name = os.path.basename(image_path)
-        target_path = os.path.join(self.image_folder, image_name)
-        
-        shutil.copy2(image_path, target_path)
-        
-        self.set_setting("backgroundImage", target_path)
-    
-    def clear_background_image(self) -> None:
-        self.set_setting("backgroundImage", None)
     
     def reset_settings(self) -> None:
         self.save_settings(self._get_default_settings())
