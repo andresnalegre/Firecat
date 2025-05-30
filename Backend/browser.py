@@ -180,20 +180,13 @@ class NavigationBar(QToolBar):
                 self.update_navigation_controls()
     
     def go_home(self):
-        """Volta para a aba inicial do Firecat (índice 0)"""
         if self.tab_widget is None:
             return
         
-        # Muda para a aba inicial (índice 0)
         self.tab_widget.setCurrentIndex(0)
-        
-        # Limpa a URL bar quando voltar para a aba inicial
         self.url_bar.clear()
-        
-        # Atualiza os controles de navegação
         self.update_navigation_controls()
         
-        # Se houver um browser manager, também pode chamar um método específico
         if hasattr(self.browser_manager, 'go_to_home_tab'):
             self.browser_manager.go_to_home_tab()
             
@@ -269,16 +262,12 @@ class BrowserManager:
         self._save_history()
     
     def go_to_home_tab(self):
-        """Método auxiliar para voltar à aba inicial do Firecat"""
         if self.tab_widget and self.tab_widget.count() > 0:
-            # Garante que a primeira aba seja sempre a aba inicial do Firecat
             self.tab_widget.setCurrentIndex(0)
             
-            # Se necessário, pode aplicar configurações específicas da aba inicial
             if hasattr(self.parent, 'handler'):
                 self.parent.handler.apply_current_background()
             
-            # Atualiza os controles de navegação
             self.update_navigation_controls()
         
     def setup_navigation_bar(self, parent_layout):
