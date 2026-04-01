@@ -1,0 +1,64 @@
+{
+  "name": "firecat",
+  "version": "1.0.0",
+  "description": "Firecat Browser",
+  "productName": "Firecat",
+  "author": "Andres Nicolas",
+  "main": "main.js",
+  "scripts": {
+    "start":     "electron --name='Firecat' .",
+    "build-mac": "electron-builder --mac --arm64"
+  },
+  "build": {
+    "appId":       "com.andresnicolas.firecat",
+    "productName": "Firecat",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon":     "icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch":   ["arm64"]
+        }
+      ]
+    },
+    "dmg": {
+      "title":        "Firecat",
+      "icon":         "icon.png",
+      "artifactName": "Firecat.dmg",
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ],
+      "window": { "width": 540, "height": 380 }
+    },
+    "extraResources": [
+      {
+        "from": "../backend",
+        "to":   "backend",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc",
+          "!**/*.pyo",
+          "!**/.env",
+          "!**/node_modules/**"
+        ]
+      },
+      {
+        "from": "../frontend/dist",
+        "to":   "frontend_dist"
+      }
+    ],
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "icon.png"
+    ]
+  },
+  "devDependencies": {
+    "electron":         "^29.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}

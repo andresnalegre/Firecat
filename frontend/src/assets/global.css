@@ -1,0 +1,35 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Syne', 'Segoe UI', sans-serif;
+}
+
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #4285F4; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #357ae8; }
+
+button { font-family: inherit; cursor: pointer; }
+input  { font-family: inherit; }
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+img.clickable {
+  pointer-events: auto;
+}
+
+.electron-app {
+  -webkit-app-region: no-drag;
+}
