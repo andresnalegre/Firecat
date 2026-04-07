@@ -16,8 +16,9 @@ app.commandLine.appendSwitch('disable-features', 'BlockInsecurePrivateNetworkReq
 let mainWindow
 let djangoProcess
 
-const DJANGO_PORT   = 8765
-const DOWNLOADS_DIR = path.join(os.homedir(), 'Downloads')
+const DJANGO_PORT      = 8765
+const DOWNLOADS_DIR    = path.join(os.homedir(), 'Downloads')
+const EXTERNAL_DJANGO  = Boolean(process.env.FIRECAT_EXTERNAL_DJANGO)
 
 const downloadSessionsSetup = new WeakSet()
 
@@ -72,6 +73,21 @@ function safeLog(...args) {
   try { process.stdout.write(args.join(' ') + '\n') } catch {}
 }
 
+function killDjango() {
+  if (!djangoProcess) return
+  try {
+    djangoProcess.kill('SIGTERM')
+    const killTimer = setTimeout(() => {
+      if (djangoProcess) {
+        safeLog('[Firecat] Django did not exit, forcing SIGKILL...')
+        try { djangoProcess.kill('SIGKILL') } catch {}
+      }
+    }, 2000)
+    killTimer.unref()
+  } catch {}
+  djangoProcess = null
+}
+
 function startDjango() {
   const backendDir = app.isPackaged
     ? path.join(process.resourcesPath, 'backend')
@@ -119,11 +135,17 @@ function waitForDjango(maxRetries = 120) {
     const check = () => {
       if (resolved) return
 
-      const req = http.get(`http://127.0.0.1:${DJANGO_PORT}/`, res => {
+      const req = http.get(`http://127.0.0.1:${DJANGO_PORT}/api/bookmarks/`, res => {
         if (resolved) return
-        resolved = true
-        safeLog('[Firecat] Django ready!')
-        resolve()
+        if (res.statusCode < 500) {
+          resolved = true
+          safeLog(`[Firecat] Django ready! (status ${res.statusCode})`)
+          resolve()
+        } else {
+          retries++
+          if (retries >= maxRetries) { reject(new Error('Django timeout')); return }
+          setTimeout(check, 500)
+        }
         res.resume()
       })
 
@@ -278,7 +300,9 @@ async function createWindow() {
   })
 
   try {
-    await waitForDjango()
+    if (!EXTERNAL_DJANGO) {
+      await waitForDjango()
+    }
     mainWindow.loadURL(`http://127.0.0.1:${DJANGO_PORT}`)
   } catch (err) {
     safeLog('[Firecat] Backend failed:', err.message)
@@ -315,21 +339,22 @@ app.whenReady().then(async () => {
     event.returnValue = mainWindow?.isFullScreen() ?? false
   })
 
-  freePort(DJANGO_PORT)
-
-  let portFree = false
-  for (let i = 0; i < 10; i++) {
-    portFree = await isPortFree(DJANGO_PORT)
-    if (portFree) break
-    await new Promise(r => setTimeout(r, 300))
+  if (!EXTERNAL_DJANGO) {
+    freePort(DJANGO_PORT)
+    let portFree = false
+    for (let i = 0; i < 10; i++) {
+      portFree = await isPortFree(DJANGO_PORT)
+      if (portFree) break
+      await new Promise(r => setTimeout(r, 300))
+    }
+    startDjango()
   }
 
-  startDjango()
   await createWindow()
 
   app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      if (!djangoProcess) {
+      if (!djangoProcess && !EXTERNAL_DJANGO) {
         safeLog('[Firecat] Restarting Django...')
         startDjango()
       }
@@ -340,16 +365,17 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    if (djangoProcess) {
-      djangoProcess.kill('SIGTERM')
-      setTimeout(() => djangoProcess?.kill('SIGKILL'), 2000)
+    if (!EXTERNAL_DJANGO) {
+      killDjango()
+      freePort(DJANGO_PORT)
     }
-    freePort(DJANGO_PORT)
     app.quit()
   }
 })
 
 app.on('before-quit', () => {
-  if (djangoProcess) djangoProcess.kill('SIGTERM')
-  freePort(DJANGO_PORT)
+  if (!EXTERNAL_DJANGO) {
+    killDjango()
+    freePort(DJANGO_PORT)
+  }
 })

@@ -1,5 +1,5 @@
 from pathlib import Path
-from decouple import config
+from decouple import config  # type: ignore[import-untyped]
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,8 +11,8 @@ FRONTEND_DIST = Path(
     )
 )
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-in-production')
-DEBUG = config('DEBUG', default=True, cast=bool)
+SECRET_KEY    = config('SECRET_KEY', default='django-insecure-change-in-production')
+DEBUG         = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
@@ -92,9 +92,18 @@ SESSION_COOKIE_AGE      = 60 * 60 * 24 * 30
 X_FRAME_OPTIONS = 'ALLOWALL'
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
-    'DEFAULT_PARSER_CLASSES':   ['rest_framework.parsers.JSONParser'],
+    'DEFAULT_RENDERER_CLASSES':     ['rest_framework.renderers.JSONRenderer'],
+    'DEFAULT_PARSER_CLASSES':       ['rest_framework.parsers.JSONParser'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['firecat_project.authentication.CsrfExemptSessionAuthentication'],
+    'DEFAULT_PERMISSION_CLASSES':   ['rest_framework.permissions.AllowAny'],
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8765',
+    'http://localhost:8765',
+    'http://127.0.0.1:5173',
+    'http://localhost:5173',
+]
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',

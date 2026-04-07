@@ -6,7 +6,6 @@ import DownloadsPage from './DownloadsPage'
 const isElectron    = Boolean(window.firecat)
 const isSearchProxy = (url) => url?.startsWith('firecat://search')
 const isFirecatPage = (url) => url?.startsWith('firecat://') && !url?.startsWith('firecat://search')
-const API_BASE      = 'http://127.0.0.1:8765'
 
 const getQuery = (url) => {
   try { return decodeURIComponent(url.split('?q=')[1] || '') }
@@ -24,7 +23,7 @@ function DeepResults({ url, onNavigate }) {
   useEffect(() => {
     setLoading(true); setError(null); setGroups([])
     const q = url.split('?q=')[1] || ''
-    fetch(`${API_BASE}/api/search/?q=${q}`)
+    fetch(`/api/search/?q=${q}`)
       .then(r => r.json())
       .then(data => {
         if (data.groups?.length > 0) setGroups(data.groups)
@@ -57,7 +56,6 @@ function DeepResults({ url, onNavigate }) {
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '36px 24px 80px' }}>
 
-        {/* header */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -74,7 +72,6 @@ function DeepResults({ url, onNavigate }) {
           </div>
         </div>
 
-        {/* results */}
         {!loading && !error && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
             {groups.map((group, gi) => (
@@ -175,7 +172,6 @@ function DeepResults({ url, onNavigate }) {
           </div>
         )}
 
-        {/* error */}
         {error && !loading && (
           <div style={{ textAlign: 'center', padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
             <div style={{ fontSize: 40 }}>🔍</div>
@@ -185,7 +181,6 @@ function DeepResults({ url, onNavigate }) {
         )}
       </div>
 
-      {/* loading */}
       {loading && (
         <div style={{
           position: 'absolute', inset: 0,

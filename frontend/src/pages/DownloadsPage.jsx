@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
-
-const STORAGE_KEY = 'firecat_downloads'
+import { useDownloads } from '../context/DownloadsContext'
 
 function FileIcon({ ext, size = 32 }) {
   const colors = {
@@ -55,47 +54,17 @@ function groupByDate(downloads) {
 }
 
 export default function DownloadsPage() {
-  const { theme } = useTheme()
-
-  const [downloads, setDownloads] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
-  })
-  const [search, setSearch] = useState('')
-
-  useEffect(() => {
-    const sync = () => {
-      try {
-        setDownloads(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
-      } catch {}
-    }
-    window.addEventListener('storage', sync)
-    window.addEventListener('firecat-downloads-updated', sync)
-    return () => {
-      window.removeEventListener('storage', sync)
-      window.removeEventListener('firecat-downloads-updated', sync)
-    }
-  }, [])
-
-  const removeOne = (id) => {
-    const updated = downloads.filter(d => d.id !== id)
-    setDownloads(updated)
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)) } catch {}
-    window.dispatchEvent(new CustomEvent('firecat-downloads-updated'))
-  }
-
-  const clearAll = () => {
-    setDownloads([])
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify([])) } catch {}
-    window.dispatchEvent(new CustomEvent('firecat-downloads-updated'))
-  }
+  const { theme }                  = useTheme()
+  const { downloads, remove, clear } = useDownloads()
+  const [search, setSearch]        = useState('')
+  const isElectron                 = Boolean(window.firecat)
+  const muted                      = theme.textMuted
 
   const filtered = search.trim()
     ? downloads.filter(d => d.filename?.toLowerCase().includes(search.toLowerCase()))
     : downloads
 
-  const grouped    = groupByDate(filtered)
-  const isElectron = Boolean(window.firecat)
-  const muted      = theme.textMuted
+  const grouped = groupByDate(filtered)
 
   return (
     <div style={{
@@ -105,7 +74,6 @@ export default function DownloadsPage() {
     }}>
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '40px 32px 80px' }}>
 
-        {/* header */}
         <div style={{
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', marginBottom: 32,
@@ -155,7 +123,7 @@ export default function DownloadsPage() {
             )}
             {downloads.length > 0 && (
               <button
-                onClick={clearAll}
+                onClick={clear}
                 style={{
                   padding: '8px 16px', borderRadius: 8,
                   border: `1.5px solid rgba(255,59,48,0.3)`,
@@ -169,7 +137,6 @@ export default function DownloadsPage() {
           </div>
         </div>
 
-        {/* search */}
         <div style={{ position: 'relative', marginBottom: 28 }}>
           <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
             width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -191,7 +158,6 @@ export default function DownloadsPage() {
           />
         </div>
 
-        {/* empty state */}
         {downloads.length === 0 && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: muted }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>📂</div>
@@ -200,7 +166,6 @@ export default function DownloadsPage() {
           </div>
         )}
 
-        {/* no results */}
         {downloads.length > 0 && filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: muted }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
@@ -208,7 +173,6 @@ export default function DownloadsPage() {
           </div>
         )}
 
-        {/* grouped list */}
         {Object.entries(grouped).map(([label, items]) => (
           <div key={label} style={{ marginBottom: 32 }}>
             <div style={{
@@ -302,7 +266,7 @@ export default function DownloadsPage() {
                         </button>
                       )}
                       <button
-                        onClick={() => removeOne(d.id)}
+                        onClick={() => remove(d.id)}
                         title="Remove from history"
                         style={{
                           width: 32, height: 32, borderRadius: 8, border: 'none',

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
+import { DownloadsProvider } from './context/DownloadsContext'
 
 import TabBar       from './components/TabBar'
 import NavBar       from './components/NavBar'
@@ -41,7 +42,8 @@ function BrowserShell() {
 
   useEffect(() => {
     if (!isElectron) return
-    window.firecat.onFullscreenChange?.((val) => setIsFullscreen(val))
+    const cleanup = window.firecat.onFullscreenChange?.((val) => setIsFullscreen(val))
+    return () => cleanup?.()
   }, [])
 
   useEffect(() => {
@@ -179,7 +181,9 @@ function BrowserShell() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserShell />
+      <DownloadsProvider>
+        <BrowserShell />
+      </DownloadsProvider>
     </ThemeProvider>
   )
 }

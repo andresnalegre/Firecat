@@ -5,7 +5,9 @@ contextBridge.exposeInMainWorld('firecat', {
   platform: process.platform,
 
   onDownloadProgress: (callback) => {
-    ipcRenderer.on('download-progress', (event, data) => callback(data))
+    const handler = (event, data) => callback(data)
+    ipcRenderer.on('download-progress', handler)
+    return () => ipcRenderer.removeListener('download-progress', handler)
   },
 
   removeDownloadListeners: () => {
@@ -29,6 +31,8 @@ contextBridge.exposeInMainWorld('firecat', {
   },
 
   onFullscreenChange: (callback) => {
-    ipcRenderer.on('fullscreen-change', (event, val) => callback(val))
+    const handler = (event, val) => callback(val)
+    ipcRenderer.on('fullscreen-change', handler)
+    return () => ipcRenderer.removeListener('fullscreen-change', handler)
   },
 })

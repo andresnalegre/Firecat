@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import { useDownloads } from '../context/DownloadsContext'
 
-const isElectron  = Boolean(window.firecat)
-const STORAGE_KEY = 'firecat_downloads'
+const isElectron = Boolean(window.firecat)
 
 function FileIcon({ color }) {
   return (
@@ -15,68 +15,36 @@ function FileIcon({ color }) {
   )
 }
 
-function readStorage() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
-}
-
-function writeStorage(list) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
-    window.dispatchEvent(new CustomEvent('firecat-downloads-updated'))
-  } catch {}
-}
-
 export default function DownloadBar() {
-  const { theme } = useTheme()
-
-  const [sessionDownloads, setSessionDownloads] = useState([])
-  const [hidden, setHidden] = useState(new Set())
+  const { theme }              = useTheme()
+  const { downloads, upsert } = useDownloads()
+  const [hidden, setHidden]    = useState(new Set())
+  const [sessionIds, setSessionIds] = useState(new Set())
 
   useEffect(() => {
     if (!isElectron) return
 
-    window.firecat.onDownloadProgress((data) => {
+    const cleanup = window.firecat.onDownloadProgress((data) => {
       const isFinished = data.state === 'completed' || data.state === 'interrupted' || data.state === 'cancelled'
 
-      const current = readStorage()
-      const idx     = current.findIndex(d => d.id === data.id)
-      const entry   = {
+      const existing = downloads.find(d => d.id === data.id)
+      const entry = {
         ...data,
         completedAt: isFinished
           ? new Date().toISOString()
-          : (idx !== -1 ? current[idx].completedAt : null),
+          : (existing?.completedAt ?? null),
       }
 
-      if (idx !== -1) {
-        const updated = [...current]
-        updated[idx] = entry
-        writeStorage(updated)
-      } else {
-        writeStorage([...current, entry])
-      }
-
-      setSessionDownloads(prev => {
-        const si = prev.findIndex(d => d.id === data.id)
-        const sessionEntry = {
-          ...data,
-          completedAt: isFinished
-            ? new Date().toISOString()
-            : (si !== -1 ? prev[si].completedAt : null),
-        }
-        if (si !== -1) {
-          const updated = [...prev]
-          updated[si] = sessionEntry
-          return updated
-        }
-        setHidden(h => { const next = new Set(h); next.delete(data.id); return next })
-        return [...prev, sessionEntry]
-      })
+      upsert(entry)
+      setSessionIds(prev => new Set([...prev, data.id]))
+      setHidden(prev => { const next = new Set(prev); next.delete(data.id); return next })
     })
 
-    return () => window.firecat.removeDownloadListeners?.()
+    return () => cleanup()
   }, [])
 
-  const visible = sessionDownloads.filter(d => !hidden.has(d.id))
+  const sessionDownloads = downloads.filter(d => sessionIds.has(d.id))
+  const visible          = sessionDownloads.filter(d => !hidden.has(d.id))
 
   if (!isElectron || visible.length === 0) return null
 
