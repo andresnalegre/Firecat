@@ -3,7 +3,7 @@
 
   # Firecat Browser
 
-  An open-source browser built with Electron, React, and Django, available for macOS.
+  A new way to browse the web.
 
   ![Electron](https://img.shields.io/badge/Electron-29-blue?logo=electron)
   ![React](https://img.shields.io/badge/React-18-blue?logo=react)
@@ -19,19 +19,18 @@
 
 ## About
 
-**Firecat** is a desktop browser with Deep Search powered by multi engine search tools including Bing, DuckDuckGo, Brave, Mojeek and Yahoo, using Google Hacking operators and search filters.
+**Firecat** is a desktop browser available for macOS that combines multi-engine search, operators, and filters to deliver better search results. This open-source browser is built with Electron, React, and Django.
 
 ## Features
 
-- Multi tab browsing with up to 15 tabs
+- Multi tab browsing
 - Bookmark bar with pinnable shortcuts
-- Browsing history with deduplication
-- Deep Search across 40+ operator groups
+- Browsing history
+- Deep Search
 - Built in web proxy with SSL fallback
 - Real-time download progress bar
 - Download history page at `firecat://downloads`
 - Multiple themes including dark and light modes
-- Fullscreen support with native macOS traffic lights
 
 ---
 
@@ -54,59 +53,6 @@ xattr -cr /Applications/Firecat.app
 ```
 
 Then open Firecat from Applications or Launchpad normally.
-
----
-
-## Run locally
-
-### Requirements
-
-- Python 3.10+
-- Node.js 18+
-
-### Setup
-
-```bash
-git clone https://github.com/andresnalegre/Firecat.git
-cd Firecat
-python3 firecat.py
-```
-
-The launcher installs all dependencies, runs migrations, builds the frontend and starts the app automatically.
-
----
-
-## Build DMG
-
-```bash
-cd frontend && npm run build
-cd ../electron && npm run build-mac
-```
-
-Output: `electron/dist/Firecat.dmg`
-
----
-
-## Keyboard shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Cmd+T` | New tab |
-| `Cmd+W` | Close tab |
-| `Cmd+D` | Bookmark page |
-| `Cmd+H` | History panel |
-
----
-
-## Tech stack
-
-| Layer | Technology |
-|-------|------------|
-| Shell | Electron 29 |
-| Frontend | React 18 + Vite |
-| Backend | Django 5 + Django REST Framework |
-| Search | Bing · DuckDuckGo · Brave · Mojeek · Yahoo |
-| Database | SQLite |
 
 ---
 
