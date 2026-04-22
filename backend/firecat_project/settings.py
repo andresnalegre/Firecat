@@ -92,10 +92,10 @@ SESSION_COOKIE_AGE      = 60 * 60 * 24 * 30
 X_FRAME_OPTIONS = 'ALLOWALL'
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES':     ['rest_framework.renderers.JSONRenderer'],
-    'DEFAULT_PARSER_CLASSES':       ['rest_framework.parsers.JSONParser'],
+    'DEFAULT_RENDERER_CLASSES':       ['rest_framework.renderers.JSONRenderer'],
+    'DEFAULT_PARSER_CLASSES':         ['rest_framework.parsers.JSONParser'],
     'DEFAULT_AUTHENTICATION_CLASSES': ['firecat_project.authentication.CsrfExemptSessionAuthentication'],
-    'DEFAULT_PERMISSION_CLASSES':   ['rest_framework.permissions.AllowAny'],
+    'DEFAULT_PERMISSION_CLASSES':     ['rest_framework.permissions.AllowAny'],
 }
 
 CSRF_TRUSTED_ORIGINS = [
@@ -111,9 +111,24 @@ CORS_ALLOWED_ORIGINS = config(
 ).split(',')
 CORS_ALLOW_CREDENTIALS = True
 
-CACHES = {
-    'default': {
-        'BACKEND':  'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'firecat-search-cache',
+# Cache — uses locmem in dev; swap for Redis in prod via CACHE_URL env var
+_CACHE_URL = config('CACHE_URL', default='')
+if _CACHE_URL:
+    CACHES = {
+        'default': {
+            'BACKEND':  'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _CACHE_URL,
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND':  'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'firecat-search-cache',
+            'OPTIONS':  {'MAX_ENTRIES': 500},
+        }
+    }
+
+# Required for StreamingHttpResponse to work correctly with Django's dev server
+# When behind a proxy/nginx, ensure proxy_buffering is off for /api/search/
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB

@@ -8,9 +8,9 @@ const genId      = () => Math.random().toString(36).slice(2, 9)
 
 const isUrl = (s) => {
   const t = s.trim()
-  if (/^https?:\/\//i.test(t)) return true
-  if (/^firecat:\/\//i.test(t)) return true
-  if (/^www\./i.test(t)) return true
+  if (/^https?:\/\//i.test(t))       return true
+  if (/^firecat:\/\//i.test(t))      return true
+  if (/^www\./i.test(t))             return true
   if (/^[^\s]+\.[a-z]{2,}(\/.*)?$/i.test(t) && !t.includes(' ')) return true
   return false
 }
@@ -29,6 +29,7 @@ const normaliseUrl = (u) => u
 const toUrl = (s, hacker = false) => {
   const trimmed = s.trim()
 
+  // Already a firecat:// internal URL — pass through as-is
   if (/^firecat:\/\//i.test(trimmed)) return trimmed
 
   if (/^https?:\/\//i.test(trimmed)) {
@@ -43,6 +44,7 @@ const toUrl = (s, hacker = false) => {
     return isElectron ? clean : `${PROXY}${encodeURIComponent(clean)}`
   }
 
+  // Plain text — search
   if (hacker) return `firecat://search?q=${encodeURIComponent(trimmed)}`
 
   const searchUrl = isElectron
@@ -64,6 +66,16 @@ export const cleanUrl = (url) => {
   try {
     if (url.includes('/api/proxy/?url=')) {
       return decodeURIComponent(url.split('/api/proxy/?url=')[1])
+    }
+    // Show firecat:// URLs in a friendly way
+    if (url.startsWith('firecat://search')) {
+      try {
+        const q = decodeURIComponent(url.split('?q=')[1]?.split('&')[0] || '')
+        return q ? `🔍 ${q}` : url
+      } catch { return url }
+    }
+    if (url.startsWith('firecat://')) {
+      return url.replace('firecat://', '').split('?')[0]
     }
   } catch {}
   return url
@@ -92,26 +104,40 @@ export function useBrowser() {
 
   const _push = (tab, url, title, hacker, useProxy = false) => {
     const hist = [...(tab.hist || []).slice(0, (tab.histIdx ?? -1) + 1), url]
+    let favicon = '🌐'
+    if (hacker)                         favicon = '⚡'
+    if (url.startsWith('firecat://search')) favicon = '🔍'
+    if (url.startsWith('firecat://downloads')) favicon = '📥'
     return {
       ...tab,
       url,
       title,
-      isHome:   false,
-      favicon:  hacker ? '⚡' : '🌐',
+      isHome:  false,
+      favicon,
       hist,
-      histIdx:  hist.length - 1,
+      histIdx: hist.length - 1,
       useProxy,
     }
   }
 
   const navigate = useCallback((query, hacker = false, tabIdx = null) => {
-    const idx   = tabIdx ?? activeTab
-    const url   = toUrl(query, hacker)
-    const title = isUrl(query)
-      ? query.startsWith('firecat://')
-        ? query.replace('firecat://', '').replace('/', '').replace(/^\w/, c => c.toUpperCase())
-        : stripWww(query).replace(/^https?:\/\//, '').split('/')[0]
-      : `Search: ${query}`
+    const idx = tabIdx ?? activeTab
+    const url = toUrl(query, hacker)
+
+    // Build a human-readable title
+    let title
+    if (url.startsWith('firecat://search')) {
+      try {
+        const q = decodeURIComponent(url.split('?q=')[1]?.split('&')[0] || '')
+        title = `🔍 ${q}`
+      } catch { title = 'Deep Search' }
+    } else if (url.startsWith('firecat://downloads')) {
+      title = 'Downloads'
+    } else if (isUrl(query)) {
+      title = stripWww(query).replace(/^https?:\/\//, '').split('/')[0]
+    } else {
+      title = `Search: ${query}`
+    }
 
     setTabs(prev => {
       const updated = [...prev]
@@ -127,6 +153,7 @@ export function useBrowser() {
       return updated
     })
 
+    // Don't add firecat:// internal pages to history
     if (!/^firecat:\/\//i.test(url)) {
       const hUrl = toHistoryUrl(query)
       localHistory.current = [
